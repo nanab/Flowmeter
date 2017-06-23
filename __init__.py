@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# Flowmeter plugin for Craftbeerpi 
+# Version 1.0 made by nanab
+# https://github.com/nanab/Flowmeter
+# Some code taken from https://github.com/adafruit/Kegomatic
+
 import os
 from subprocess import Popen, PIPE, call
 import time
@@ -6,7 +11,7 @@ from modules import cbpi
 from modules.core.hardware import ActorBase, SensorPassive, SensorActive
 import json
 from flask import Blueprint, render_template, jsonify, request
-from modules.core.props import Property
+from modules.core.props import Property, StepProperty
 
 blueprint = Blueprint('flowmeter', __name__)
 try:
@@ -58,6 +63,13 @@ class Flowmeter(SensorPassive):
     fms = dict()
     gpio = Property.Select("GPIO", options=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27])
     def init(self):
+        unit = cbpi.get_config_parameter("flowunit", None)
+        if unit is None:
+             print "INIT FLOW DB"
+             try:
+                 cbpi.add_config_parameter("flowunit", "L", "select", "Flowmeter unit", options=["L","gal(us)","gal(uk)","qt"])
+             except:
+                 cbpi.notify("Flowmeter Error", "Unable to update database.", type="danger", timeout=None)
         try:
             GPIO.setup(int(self.gpio),GPIO.IN, pull_up_down = GPIO.PUD_UP)
             GPIO.add_event_detect(int(self.gpio), GPIO.RISING, callback=self.doAClick, bouncetime=20)
@@ -66,16 +78,10 @@ class Flowmeter(SensorPassive):
             print e
     def get_unit(self):
         unit = cbpi.get_config_parameter("flowunit", None)
-        if unit is None:
-             print "INIT FLOW DB"
-             try:
-                 cbpi.add_config_parameter("flowunit", "L", "select", "Flowmeter unit", options=["L","gal(us)","gal(uk)","qt"])
-             except:
-                 cbpi.notify("Flowmeter Error", "Unable to update database.", type="danger", timeout=None)
         return unit
     def doAClick(self, channel):
         currentTime = int(time.time() * FlowMeterData.MS_IN_A_SECOND)
-        self.fms[self.gpio].update(currentTime)
+        self.fms[int(self.gpio)].update(currentTime)
     def convert(self, inputFlow):
         unit = cbpi.get_config_parameter("flowunit", None)
         if (unit == "gal(us)"): 
@@ -92,25 +98,70 @@ class Flowmeter(SensorPassive):
         flow = self.fms[int(self.gpio)].pour
         flowConverted = self.convert(flow)
         self.data_received(flowConverted)
-    def getValue(self,ett,tva):
-        print ett
-        print tva
+        
+    def getValue(self):
         flow = self.fms[int(self.gpio)].pour
         flowConverted = self.convert(flow)
         return flowConverted
     def reset(self):
-        self.fms[self.gpio].clear()
-        Return 
-@blueprint.route('/<int:t>/reset', methods=['GET'])
-def reset_sensor_value(t):
-    Flowmeter(t).reset
-    return "OK"
-@blueprint.route('/<int:t>', methods=['GET'])
-def get_sensor_value(t):
-    print t
-    sensValue = Flowmeter().getValue
+        self.fms[int(self.gpio)].clear()
+        return "Ok"
+@blueprint.route('/<id>/reset', methods=['GET'])
+def reset_sensor_value(id):
+    for key, value in cbpi.cache.get("sensors").iteritems():
+        if (key == int(id)):
+            if (value.type == "Flowmeter"):
+                flowReset = value.instance.reset()
+                return flowReset
+            else:
+                return "Sensor is not a Flowmeter"
+        else:
+            return "Sensor not found"
+@blueprint.route('/<id>', methods=['GET'])
+def get_sensor_value(id):
+    for key, value in cbpi.cache.get("sensors").iteritems():
+        if (key == int(id)):
+            if (value.type == "Flowmeter"):
+                flowValue = value.instance.getValue()
+                return flowValue
+            else:
+                return "Sensor is not a Flowmeter"
+        else:
+            return "Sensor not found"
 
-    return sensValue
+@blueprint.route('/list_all_sensors', methods=['GET'])
+def list_all_sensors():
+    output = []
+    for key, value in cbpi.cache.get("sensors").iteritems():
+        output.append({"id": key,"name": value.name, "type": value.type})
+    return json.dumps(output)
+
+@cbpi.actor
+class FlowmeterReset(ActorBase):
+    #custom property 
+    flowID = Property.Text("Flowsensor id", True, "1")
+    def on(self, power=0):
+        for key, value in cbpi.cache.get("sensors").iteritems():
+            if (key == int(self.flowID)):
+                if (value.type == "Flowmeter"):
+                    flowReset = value.instance.reset()
+                    print flowReset
+                else:
+                    print "Sensor is not a Flowmeter"
+            else:
+                print "Sensor not found"
+        
+    def off(self):
+        for key, value in cbpi.cache.get("sensors").iteritems():
+            if (key == int(self.flowID)):
+                if (value.type == "Flowmeter"):
+                    flowReset = value.instance.reset()
+                    print flowReset
+                else:
+                    print "Sensor is not a Flowmeter"
+            else:
+                print "Sensor not found"
+
 @cbpi.initalizer()
 def init(cbpi):
     print "INITIALIZE FlOWMETER SENSOR MODULE"
