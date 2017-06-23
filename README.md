@@ -16,16 +16,16 @@ Add the sensor under System -> Hardware settings -> Sensors -> Flowmeter.
 
 There is some http api commands avaliable.
 <br>
-To get the id of your sensor: http://<ip of pi>/api/flowmeter/list_all_sensors 
+To get the id of your sensor: http://"ip of pi"/api/flowmeter/list_all_sensors 
 <br>
-For getting the value of sensor: http://<ip of pi>/api/flowmeter/<sensor id>
+For getting the value of sensor: http://"ip of pi"/api/flowmeter/"sensor id"
 <br>
-For reseting the sensors value: http://<ip of pi>/api/flowmeter/<sensor id>/reset
+For reseting the sensors value: http://"ip of pi"/api/flowmeter/"sensor id"/reset
 
 As it is for now there is no way of adding a reset function direct on the flowmeter in gui. So i have implented an Actor for reseting the value as a workaround.
 
 Add this under System -> Hardware settings -> Actors -> FlowmeterReset.
 <br>
-You have to enter the id of the flowmeter which you can find by using the api command http://<ip of pi>/api/flowmeter/list_all_sensors 
+You have to enter the id of the flowmeter which you can find by using the api command http://"ip of pi"/api/flowmeter/list_all_sensors 
 
 
