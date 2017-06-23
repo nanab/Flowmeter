@@ -14,6 +14,17 @@ Red -> 10k ohm resistor -> GPIO pin.
 
 Add the sensor under System -> Hardware settings -> Sensors -> Flowmeter.
 
+You can choose between following units in System -> Parameter -> flowunit. (Conversion is builtin)
+<br>
+Liters.
+<br>
+Gallons US.
+<br>
+Gallons UK.
+<br>
+Quarts.
+<br>
+
 There is some http api commands avaliable.
 <br>
 To get the id of your sensor: http://"ip of pi"/api/flowmeter/list_all_sensors 
