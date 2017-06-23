@@ -8,10 +8,10 @@ import os
 from subprocess import Popen, PIPE, call
 import time
 from modules import cbpi
-from modules.core.hardware import ActorBase, SensorPassive, SensorActive
+from modules.core.hardware import ActorBase, SensorPassive
 import json
 from flask import Blueprint, render_template, jsonify, request
-from modules.core.props import Property, StepProperty
+from modules.core.props import Property
 
 blueprint = Blueprint('flowmeter', __name__)
 try:
