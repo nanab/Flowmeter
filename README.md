@@ -10,7 +10,7 @@ Red -> 5v.
 <br>
 Black -> GND.
 <br>
-Red -> 10k ohm resistor -> GPIO pin.
+Yellow -> 10k ohm resistor -> GPIO pin.
 
 Add the sensor under System -> Hardware settings -> Sensors -> Flowmeter.
 
