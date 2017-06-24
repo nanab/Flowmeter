@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 # Flowmeter plugin for Craftbeerpi 
-# Version 1.0 made by nanab
+# Version 1.5 made by nanab
 # https://github.com/nanab/Flowmeter
 # Some code taken from https://github.com/adafruit/Kegomatic
 
 import os
-from subprocess import Popen, PIPE, call
 import time
 from modules import cbpi
 from modules.core.hardware import ActorBase, SensorPassive
+from modules.core.step import StepBase
 import json
 from flask import Blueprint, render_template, jsonify, request
-from modules.core.props import Property
+from modules.core.props import Property, StepProperty
 
 blueprint = Blueprint('flowmeter', __name__)
 try:
@@ -138,7 +138,6 @@ def list_all_sensors():
 
 @cbpi.actor
 class FlowmeterReset(ActorBase):
-    #custom property 
     flowID = Property.Text("Flowsensor id", True, "1")
     def on(self, power=0):
         for key, value in cbpi.cache.get("sensors").iteritems():
@@ -161,9 +160,38 @@ class FlowmeterReset(ActorBase):
                     print "Sensor is not a Flowmeter"
             else:
                 print "Sensor not found"
+@cbpi.step
+class Flowmeter(StepBase):
+    sensor = StepProperty.Sensor("Sensor")
+    actor = StepProperty.Actor("Actor")
+    volume = Property.Number("Volume", configurable=True)
+    resetFlowmeter = Property.Number("Reset flowmeter when done. 1 = Yes 0 = No", configurable=True)
+    def init(self):
+        self.actor_on(self.actor)
+
+    @cbpi.action("Turn Actor OFF")
+    def start(self):
+        self.actor_off(self.actor)
+
+    def reset(self):
+        self.actor_off(self.actor)
+
+    def finish(self):
+        self.actor_off(self.actor)
+        if (self.resetFlowmeter == "1"):
+            for key, value in cbpi.cache.get("sensors").iteritems():
+                if (key == int(self.sensor)):
+                    value.instance.reset()
+
+    def execute(self):
+        for key, value in cbpi.cache.get("sensors").iteritems():
+            if (key == int(self.sensor)):
+                sensorValue = value.instance.getValue()
+        if (sensorValue >= self.volume):
+            self.next()
 
 @cbpi.initalizer()
 def init(cbpi):
-    print "INITIALIZE FlOWMETER SENSOR MODULE"
+    print "INITIALIZE FlOWMETER SENSOR,ACTOR AND STEP MODULE"
     cbpi.app.register_blueprint(blueprint, url_prefix='/api/flowmeter')
     print "READY"
