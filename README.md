@@ -2,6 +2,15 @@
 
 This plugin is for a flowmeter of magnetic hall type. Like this https://www.adafruit.com/product/828.
 <br>
+
+Update: 
+<br>
+There is now a reset function on the sensor in GUI so i have removed the custom actor. To use this click on arrow on sensor an choose reset to zero.
+<br>
+Please make sure that you have the latest avaliable version of Craftbeerpi from github installed.
+
+<br>
+<br>
 This plugin includes sensor, actor(for reseting the sensor) and a custom step.
 
 Use a 10k ohm resistor on sensors signal pin to protect your Pi.
@@ -34,10 +43,6 @@ To get the id of your sensor: http://"ip of pi":5000/api/flowmeter/list_all_sens
 For getting the value of sensor: http://"ip of pi:5000api/flowmeter/"sensor id"
 <br>
 For reseting the sensors value: http://"ip of pi":5000/api/flowmeter/"sensor id"/reset
-
-As it is for now there is no way of adding a reset function direct on the flowmeter in gui. So i have implented an Actor for reseting the value as a workaround.
-
-Add this under System -> Hardware settings -> Actors -> FlowmeterReset.
 <br>
 You have to enter the id of the flowmeter which you can find by using the api command http://"ip of pi":5000/api/flowmeter/list_all_sensors 
 <br>
@@ -48,7 +53,9 @@ When the step is started it powers on an actor and when it reaches the given vol
 <br>
 Configurable values for the step is:
 <br>
-Actor: Actor thats going to be turned On and Off.
+Actor 1: Actor 1 thats going to be turned On and Off.
+<br>
+Actor 2: Actor 2 thats going to be turned On and Off. ( This is optional you dont have to use it)
 <br>
 Sensor: Flowmeter thats going to be used to measure the volume.
 <br>

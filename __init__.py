@@ -62,6 +62,7 @@ class FlowMeterData():
 class Flowmeter(SensorPassive):
     fms = dict()
     gpio = Property.Select("GPIO", options=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27])
+    sensorShow = Property.Select("Flowmeter display", options=["Total volume", "Flow, unit/s"])
     def init(self):
         unit = cbpi.get_config_parameter("flowunit", None)
         if unit is None:
@@ -78,6 +79,8 @@ class Flowmeter(SensorPassive):
             print e
     def get_unit(self):
         unit = cbpi.get_config_parameter("flowunit", None)
+        if (self.sensorShow == "Flow, unit/s"):
+            unit = unit + "/s"
         return unit
     def doAClick(self, channel):
         currentTime = int(time.time() * FlowMeterData.MS_IN_A_SECOND)
@@ -92,13 +95,23 @@ class Flowmeter(SensorPassive):
             inputFlow = inputFlow * 1.056688
         else:
             pass
-        inputFlow = "{0:.2f}".format(inputFlow)
+        if (self.sensorShow == "Flow, unit/s"):
+            inputFlow = "{0:.1f}".format(inputFlow)
+        else:
+            inputFlow = "{0:.2f}".format(inputFlow)
         return inputFlow
     def read(self):
-        flow = self.fms[int(self.gpio)].pour
-        flowConverted = self.convert(flow)
-        self.data_received(flowConverted)
-        
+        if (self.sensorShow == "Total volume"):
+            flow = self.fms[int(self.gpio)].pour
+            flowConverted = self.convert(flow)
+            self.data_received(flowConverted)
+        elif (self.sensorShow == "Flow, unit/s"):
+            flow = self.fms[int(self.gpio)].flow
+            flowConverted = self.convert(flow)
+            self.data_received(flowConverted)
+        else:
+            print "error"
+
     def getValue(self):
         flow = self.fms[int(self.gpio)].pour
         flowConverted = self.convert(flow)
@@ -106,6 +119,9 @@ class Flowmeter(SensorPassive):
     def reset(self):
         self.fms[int(self.gpio)].clear()
         return "Ok"
+    @cbpi.action("Reset to zero")
+    def resetButton(self):
+        self.reset()
 @blueprint.route('/<id>/reset', methods=['GET'])
 def reset_sensor_value(id):
     for key, value in cbpi.cache.get("sensors").iteritems():
@@ -136,48 +152,38 @@ def list_all_sensors():
         output.append({"id": key,"name": value.name, "type": value.type})
     return json.dumps(output)
 
-@cbpi.actor
-class FlowmeterReset(ActorBase):
-    flowID = Property.Text("Flowsensor id", True, "1")
-    def on(self, power=0):
-        for key, value in cbpi.cache.get("sensors").iteritems():
-            if (key == int(self.flowID)):
-                if (value.type == "Flowmeter"):
-                    flowReset = value.instance.reset()
-                    print flowReset
-                else:
-                    print "Sensor is not a Flowmeter"
-            else:
-                print "Sensor not found"
-        
-    def off(self):
-        for key, value in cbpi.cache.get("sensors").iteritems():
-            if (key == int(self.flowID)):
-                if (value.type == "Flowmeter"):
-                    flowReset = value.instance.reset()
-                    print flowReset
-                else:
-                    print "Sensor is not a Flowmeter"
-            else:
-                print "Sensor not found"
+
 @cbpi.step
 class Flowmeter(StepBase):
     sensor = StepProperty.Sensor("Sensor")
-    actor = StepProperty.Actor("Actor")
+    actorA = StepProperty.Actor("Actor 1")
+    actorB = StepProperty.Actor("Actor 2")
     volume = Property.Number("Volume", configurable=True)
-    resetFlowmeter = Property.Number("Reset flowmeter when done. 1 = Yes 0 = No", configurable=True)
+    resetFlowmeter = Property.Number("Reset flowmeter when done. 1 = Yes 0 = No", configurable=True, default_value="1")
     def init(self):
-        self.actor_on(self.actor)
+    	if self.actorA is not None:
+            self.actor_on(self.actorA)
+        if self.actorB is not None:
+            self.actor_on(self.actorB)   
 
     @cbpi.action("Turn Actor OFF")
     def start(self):
-        self.actor_off(self.actor)
+        if self.actorA is not None:
+            self.actor_off(self.actorA)
+        if self.actorB is not None:
+            self.actor_off(self.actorB)   
 
     def reset(self):
-        self.actor_off(self.actor)
+        if self.actorA is not None:
+            self.actor_off(self.actorA)
+        if self.actorB is not None:
+            self.actor_off(self.actorB)   
 
     def finish(self):
-        self.actor_off(self.actor)
+        if self.actorA is not None:
+            self.actor_off(self.actorA)
+        if self.actorB is not None:
+            self.actor_off(self.actorB)   
         if (self.resetFlowmeter == "1"):
             for key, value in cbpi.cache.get("sensors").iteritems():
                 if (key == int(self.sensor)):
