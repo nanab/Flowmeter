@@ -172,35 +172,26 @@ def list_all_sensors():
 @cbpi.step
 class Flowmeter(StepBase):
     sensor = StepProperty.Sensor("Sensor")
-    actorA = StepProperty.Actor("Actor 1")
-    actorB = StepProperty.Actor("Actor 2")
+    actorA = StepProperty.Actor("Actor")
     volume = Property.Number("Volume", configurable=True)
     resetFlowmeter = Property.Number("Reset flowmeter when done. 1 = Yes 0 = No", configurable=True, default_value="1")
 
     def init(self):
-        if self.actorA is not None:
-            self.actor_on(self.actorA)
-        if self.actorB is not None:
-            self.actor_on(self.actorB)   
+        if int(self.actorA) is not None:
+            self.actor_on(int(self.actorA))   
 
     @cbpi.action("Turn Actor OFF")
     def start(self):
         if self.actorA is not None:
-            self.actor_off(self.actorA)
-        if self.actorB is not None:
-            self.actor_off(self.actorB)   
+            self.actor_off(int(self.actorA))
 
     def reset(self):
         if self.actorA is not None:
-            self.actor_off(self.actorA)
-        if self.actorB is not None:
-            self.actor_off(self.actorB)   
+            self.actor_off(int(self.actorA))
 
     def finish(self):
         if self.actorA is not None:
-            self.actor_off(self.actorA)
-        if self.actorB is not None:
-            self.actor_off(self.actorB)   
+            self.actor_off(int(self.actorA))
         if self.resetFlowmeter == "1":
             for key, value in cbpi.cache.get("sensors").iteritems():
                 if key == int(self.sensor):
