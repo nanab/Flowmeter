@@ -201,7 +201,7 @@ class Flowmeter(StepBase):
         for key, value in cbpi.cache.get("sensors").iteritems():
             if key == int(self.sensor):
                 sensorValue = value.instance.getValue()
-        if sensorValue >= self.volume:
+        if float(sensorValue) >= float(self.volume):
             self.next()
 
 
