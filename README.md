@@ -1,4 +1,4 @@
-//There will be no more updates from me on this repo as i dont have a CPB system anymore.
+//There will be no more updates from me on this repo as i dont have a CPB system anymore. Please dont contact me on email or facebook about this plugin as cant help you whit it.
 
 
 # Flowmeter plugin for CraftbeerPi
