@@ -1,3 +1,6 @@
+//There will be no more updates from me on this repo as i dont have a CPB system anymore.
+
+
 # Flowmeter plugin for CraftbeerPi
 
 This plugin is for a flowmeter of magnetic hall type. Like this https://www.adafruit.com/product/828.
