@@ -18,7 +18,7 @@ try:
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
 except Exception as e:
-    print e
+    print(e)
     pass
 
 
@@ -70,7 +70,7 @@ class Flowmeter(SensorPassive):
     def init(self):
         unit = cbpi.get_config_parameter("flowunit", None)
         if unit is None:
-            print "INIT FLOW DB"
+            print("INIT FLOW DB")
             try:
                 cbpi.add_config_parameter("flowunit", "L", "select", "Flowmeter unit", options=["L", "gal(us)", "gal(uk)", "qt"])
             except:
@@ -80,7 +80,7 @@ class Flowmeter(SensorPassive):
             GPIO.add_event_detect(int(self.gpio), GPIO.RISING, callback=self.doAClick, bouncetime=20)
             self.fms[int(self.gpio)] = FlowMeterData()
         except Exception as e:
-            print e
+            print(e)
 
     def get_unit(self):
         unit = cbpi.get_config_parameter("flowunit", None)
@@ -119,7 +119,7 @@ class Flowmeter(SensorPassive):
             flowConverted = self.convert(flow)
             self.data_received(flowConverted)
         else:
-            print "error"
+            print("error")
 
     def getValue(self):
         flow = self.fms[int(self.gpio)].pour
@@ -137,7 +137,7 @@ class Flowmeter(SensorPassive):
 
 @blueprint.route('/<id>/reset', methods=['GET'])
 def reset_sensor_value(idt):
-    for key, value in cbpi.cache.get("sensors").iteritems():
+    for key, value in list(cbpi.cache.get("sensors").items()):
         if key == int(idt):
             if value.type == "Flowmeter":
                 flowReset = value.instance.reset()
@@ -150,7 +150,7 @@ def reset_sensor_value(idt):
 
 @blueprint.route('/<id>', methods=['GET'])
 def get_sensor_value(idt):
-    for key, value in cbpi.cache.get("sensors").iteritems():
+    for key, value in list(cbpi.cache.get("sensors").items()):
         if key == int(idt):
             if value.type == "Flowmeter":
                 flowValue = value.instance.getValue()
@@ -164,7 +164,7 @@ def get_sensor_value(idt):
 @blueprint.route('/list_all_sensors', methods=['GET'])
 def list_all_sensors():
     output = []
-    for key, value in cbpi.cache.get("sensors").iteritems():
+    for key, value in list(cbpi.cache.get("sensors").items()):
         output.append({"id": key, "name": value.name, "type": value.type})
     return json.dumps(output)
 
@@ -193,20 +193,20 @@ class Flowmeter(StepBase):
         if self.actorA is not None:
             self.actor_off(int(self.actorA))
         if self.resetFlowmeter == "1":
-            for key, value in cbpi.cache.get("sensors").iteritems():
+            for key, value in list(cbpi.cache.get("sensors").items()):
                 if key == int(self.sensor):
                     value.instance.reset()
 
     def execute(self):
-        for key, value in cbpi.cache.get("sensors").iteritems():
+        for key, value in list(cbpi.cache.get("sensors").items()):
             if key == int(self.sensor):
                 sensorValue = value.instance.getValue()
         if float(sensorValue) >= float(self.volume):
-            self.next()
+            next(self)
 
 
 @cbpi.initalizer()
 def init(cbpi):
-    print "INITIALIZE FlOWMETER SENSOR,ACTOR AND STEP MODULE"
+    print("INITIALIZE FlOWMETER SENSOR,ACTOR AND STEP MODULE")
     cbpi.app.register_blueprint(blueprint, url_prefix='/api/flowmeter')
-    print "READY"
+    print("READY")
